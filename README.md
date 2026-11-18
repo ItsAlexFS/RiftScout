@@ -92,17 +92,6 @@ Las pruebas usan `fakeredis` y un cliente de Riot falso (`tests/fake_riot.py` co
 | GET | `/api/system/keys` | `SCAN` + `TYPE` + `TTL` |
 | GET / DELETE | `/api/system/cache` | `HGETALL` / `SCAN` + `UNLINK` |
 
-## Guion sugerido para la demo (4 min)
-
-1. Mostrar el header: host de Redis Cloud, ping, número de claves y política de eviction.
-2. **Create**: agregar un Riot ID real. Señalar en el panel "Redis en vivo" las claves `rift:cache:*` nuevas con su TTL.
-3. **Read**: abrir el jugador y su champion pool, historial y duos detectados.
-4. **Sync**: pulsar *Sincronizar*. El toast muestra cuántas partidas se reutilizaron desde Redis sin llamar a Riot. El botón queda en cooldown leyendo el `TTL` de `rift:cooldown:sync:*`.
-5. **Update**: cambiar rol y notas, guardar.
-6. Leaderboards por rango, winrate y KDA (Sorted Sets).
-7. **Delete**: eliminar al jugador y mostrar que sus claves desaparecen.
-8. **Persistencia**: detener `uvicorn`, volver a levantarlo y recargar: los datos siguen ahí porque viven en la nube.
-
 ## Estructura
 
 ```

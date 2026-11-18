@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RiftScout · Redis Cloud</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>RiftScout</h1>
+      <p>Scouting de partidas de LoL sobre Redis Cloud</p>
+    </div>
+    <div id="health" class="health">conectando…</div>
+  </header>
+
+  <main class="grid">
+    <!-- ROSTER -------------------------------------------------------- -->
+    <section class="card" id="roster-card">
+      <h2>Roster</h2>
+      <form id="add-form" class="add-form">
+        <input name="gameName" placeholder="Nombre (Riot ID)" required minlength="3" maxlength="16">
+        <span class="hash">#</span>
+        <input name="tagLine" placeholder="TAG" required minlength="2" maxlength="5" class="tag">
+        <select name="role">
+          <option>TOP</option><option>JUNGLE</option><option>MID</option>
+          <option>ADC</option><option>SUPPORT</option><option selected>FILL</option>
+        </select>
+        <button type="submit">Agregar</button>
+      </form>
+      <ul id="roster" class="roster"></ul>
+    </section>
+
+    <!-- PLAYER DETAIL -------------------------------------------------- -->
+    <section class="card" id="detail">
+      <div class="empty">Selecciona un jugador del roster</div>
+    </section>
+
+    <!-- SIDE ------------------------------------------------------------ -->
+    <aside class="side">
+      <section class="card">
+        <h2>Leaderboards <small>(sorted sets)</small></h2>
+        <div class="tabs" id="lb-tabs">
+          <button data-board="rank" class="active">Rango</button>
+          <button data-board="winrate">Winrate</button>
+          <button data-board="kda">KDA</button>
+        </div>
+        <ol id="leaderboard" class="leaderboard"></ol>
+      </section>
+
+      <section class="card">
+        <h2>Campeones del roster</h2>
+        <div class="note">
+          <p><code>ZINCRBY key incremento miembro</code> suma un número al score de un miembro de un sorted set;
+            si el miembro no existe lo crea con ese valor.</p>
+          <p>Cada partida sincronizada hace <code>ZINCRBY rift:champs:roster 1 &lt;campeón&gt;</code>, así que el score
+            es el número de partidas del roster con ese campeón. Al eliminar a un jugador se resta su número de partidas con un incremento negativo.</p>
+        </div>
+        <ul id="roster-champs" class="chips"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Redis en vivo <small>(TTL, caché, rate limit)</small></h2>
+        <div id="cache-stats" class="cache-stats"></div>
+        <div id="ratelimit"></div>
+        <div class="keys-head">
+          <span>Claves volátiles</span>
+          <button id="purge" class="ghost small">Vaciar caché</button>
+        </div>
+        <div class="keys-wrap"><table class="keys"><tbody id="keys"></tbody></table></div>
+      </section>
+    </aside>
+  </main>
+
+  <dialog id="match-modal"><div id="match-body"></div></dialog>
+  <div id="toast" class="toast"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

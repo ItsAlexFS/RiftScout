@@ -46,13 +46,34 @@ cp .env.example .env                 # y edita los valores
 
 Copia tu *Development API Key* en `RIOT_API_KEY`. **Expira cada 24 h**, así que regénerala el día de la demo. Los límites de esa key son 20 peticiones/s y 100 peticiones/2 min; la app los respeta con un rate limiter guardado en Redis.
 
-## Poblar la base (seeding)
+## Preparar y poblar la base
+
+Redis no tiene esquema (no hay `CREATE TABLE`): cada estructura se crea con la primera escritura en su clave. Por eso la preparación tiene dos scripts:
+
+**1. Script de base de datos: `scripts/init_db.py`**
 
 ```bash
-python -m scripts.seed --reset --players "TuNombre#LAN,OtroJugador#LAN" --matches 20
+python -m scripts.init_db
 ```
 
-`--reset` borra únicamente las claves `rift:*` con `SCAN` + `UNLINK` (nunca `FLUSHDB`). También puedes no usar el seed y agregar los jugadores desde la interfaz.
+- Verifica la conexión con Redis Cloud (host, versión, ping) y que la *eviction policy* no pueda expulsar datos sin TTL.
+- Borra únicamente las claves `rift:*` con `SCAN` + `UNLINK` (nunca `FLUSHDB`), así que deja la base vacía sin tocar datos de otras apps.
+- Crea las estructuras iniciales (`rift:stats:cache` con los contadores en 0).
+- Imprime el esquema de claves definido en `app/keys.py`.
+
+**2. Script de datos iniciales (seeding): `scripts/seed.py`**
+
+Edita `scripts/players.txt` con los Riot IDs reales que quieres cargar (uno por línea, `Nombre#TAG` o `Nombre#TAG,ROL`) y ejecuta:
+
+```bash
+python -m scripts.seed --reset
+```
+
+- `--reset` ejecuta primero `init_db`, así que este único comando deja la base lista para las pruebas.
+- Por cada jugador: lo agrega al roster y sincroniza sus últimas 20 partidas reales desde la API de Riot (`--matches` para cambiarlo, máximo 20).
+- Usa los mismos servicios que la API, así que crea exactamente las mismas claves que la aplicación.
+- Al final imprime cuántas claves hay de cada tipo (hash, list, set, zset, string).
+- También acepta jugadores por línea de comandos: `python -m scripts.seed --players "Nombre#LAN,Otro#LAN"`.
 
 ## Ejecutar
 
@@ -92,17 +113,6 @@ Las pruebas usan `fakeredis` y un cliente de Riot falso (`tests/fake_riot.py` co
 | GET | `/api/system/keys` | `SCAN` + `TYPE` + `TTL` |
 | GET / DELETE | `/api/system/cache` | `HGETALL` / `SCAN` + `UNLINK` |
 
-## Guion sugerido para la demo (4 min)
-
-1. Mostrar el header: host de Redis Cloud, ping, número de claves y política de eviction.
-2. **Create**: agregar un Riot ID real. Señalar en el panel "Redis en vivo" las claves `rift:cache:*` nuevas con su TTL.
-3. **Read**: abrir el jugador y su champion pool, historial y duos detectados.
-4. **Sync**: pulsar *Sincronizar*. El toast muestra cuántas partidas se reutilizaron desde Redis sin llamar a Riot. El botón queda en cooldown leyendo el `TTL` de `rift:cooldown:sync:*`.
-5. **Update**: cambiar rol y notas, guardar.
-6. Leaderboards por rango, winrate y KDA (Sorted Sets).
-7. **Delete**: eliminar al jugador y mostrar que sus claves desaparecen.
-8. **Persistencia**: detener `uvicorn`, volver a levantarlo y recargar: los datos siguen ahí porque viven en la nube.
-
 ## Estructura
 
 ```
@@ -118,7 +128,9 @@ app/
   api/               Rutas y esquemas
   static/            Frontend
 scripts/
-  seed.py                  Seeding / reset con jugadores reales
+  init_db.py               Script de base de datos (verificación, reset, estructuras iniciales)
+  seed.py                  Datos iniciales con jugadores reales
+  players.txt              Lista de Riot IDs que carga el seed
 docs/MODELO_DATOS.md       Diseño del modelo clave-valor y catálogo de consultas
 tests/                     pytest + fakeredis + cliente Riot falso (solo para tests)
 ```

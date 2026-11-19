@@ -69,7 +69,7 @@ Los datos de dominio (roster, partidas, agregados, leaderboards) **no** tienen T
 
 - **Eviction:** `volatile-lru` (default de Redis Cloud). Si la base llega a su límite de memoria, Redis solo expulsa claves con TTL, es decir, la caché. Los datos sin TTL quedan protegidos. Esta separación es la razón de diseño para que *todo* lo volátil tenga TTL y nada persistente lo tenga.
 - **Durabilidad:** Redis Cloud es un servicio gestionado; los datos sobreviven a reinicios de la aplicación porque viven en el servidor remoto. En planes pagos se puede elegir persistencia **AOF cada segundo** (pérdida máxima ≈1 s de escrituras) o snapshots **RDB** periódicos. La recomendación para producción sería AOF cada segundo, ya que el roster y los agregados no se pueden reconstruir sin volver a gastar cuota de Riot. El plan Free no ofrece backups y se elimina tras 14 días sin actividad, lo cual es aceptable para un prototipo académico porque el seed reconstruye el estado.
-- **Reset seguro:** el seed borra con `SCAN MATCH rift:*` + `UNLINK` (no bloqueante) en lugar de `FLUSHDB` o `KEYS`.
+- **Reset seguro:** el script de base de datos (`scripts/init_db.py`, también llamado por `seed --reset`) borra con `SCAN MATCH rift:*` + `UNLINK` (no bloqueante) en lugar de `FLUSHDB` o `KEYS`.
 
 ## 4. Catálogo de consultas
 

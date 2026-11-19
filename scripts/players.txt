@@ -1,0 +1,15 @@
+# Jugadores que carga el seed (python -m scripts.seed --reset).
+# Un jugador por línea: Nombre#TAG o Nombre#TAG,ROL
+# ROL: TOP, JUNGLE, MID, ADC, SUPPORT o FILL (si no se pone, FILL).
+# Deben ser Riot IDs reales de la región configurada en RIOT_PLATFORM (la1 = LAN).
+# Las líneas que empiezan con # se ignoran.
+#
+# Ejemplo:
+# TuNombre#LAN,MID
+# OtroJugador#1234,SUPPORT
+
+tiramisù goloso#amore,TOP
+Rakurin#2912,JUNGLE
+GiveMeTeemoNow#GRNGO,MID
+Dibei#BCHTA,ADC
+ISMAXS#UAM,SUPPORT
